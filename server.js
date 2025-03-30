@@ -66,6 +66,23 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
+app.get("/task", (req, res) => {
+    const clientIp = req.ip;
+    const challenge = "task_" + taskCounter;
+    
+    devices[clientIp] = {
+        online: true,
+        lastSeen: new Date().toISOString(),
+        challenge,
+        solution: null,
+        reward: devices[clientIp]?.reward || 0
+    };
+
+    taskCounter++;
+    res.json({ challenge, difficulty: 2 });
+});
+
+
 // Serve UI
 // Serve UI
 app.get("/", (req, res) => {
