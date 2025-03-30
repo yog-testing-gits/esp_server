@@ -67,6 +67,7 @@ app.listen(PORT, () => {
 });
 
 // Serve UI
+// Serve UI
 app.get("/", (req, res) => {
     let html = `
     <!DOCTYPE html>
@@ -75,8 +76,8 @@ app.get("/", (req, res) => {
         <title>ESP32 Crypto Network</title>
         <style>
             body { font-family: Arial, sans-serif; background: #222; color: #ddd; text-align: center; padding: 20px; }
-            table { width: 80%; margin: auto; border-collapse: collapse; }
-            th, td { padding: 10px; border: 1px solid #444; }
+            table { width: 90%; margin: auto; border-collapse: collapse; }
+            th, td { padding: 12px; border: 1px solid #444; }
             th { background: #444; }
             .online { color: lime; font-weight: bold; }
             .offline { color: red; font-weight: bold; }
@@ -86,14 +87,15 @@ app.get("/", (req, res) => {
                 const res = await fetch('/status');
                 const data = await res.json();
                 
-                let tableHTML = '<table><tr><th>ESP32 ID</th><th>Last Solution</th><th>Last Active</th><th>Reward</th><th>Status</th></tr>';
+                let tableHTML = '<table><tr><th>ESP32 MAC</th><th>Task</th><th>Last Solution</th><th>Last Active</th><th>Reward</th><th>Status</th></tr>';
                 
-                for (const ip in data) {
-                    const device = data[ip];
+                for (const mac in data) {
+                    const device = data[mac];
                     const statusClass = device.online ? "online" : "offline";
                     tableHTML += 
                         '<tr>' +
-                        '<td>' + ip + '</td>' +
+                        '<td>' + mac + '</td>' +
+                        '<td>' + (device.challenge || "N/A") + '</td>' + 
                         '<td>' + (device.solution || "N/A") + '</td>' +
                         '<td>' + device.lastSeen + '</td>' +
                         '<td>' + device.reward + '</td>' +
@@ -116,8 +118,4 @@ app.get("/", (req, res) => {
     </html>
     `;
     res.send(html);
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
 });
