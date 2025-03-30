@@ -10,17 +10,21 @@ let devices = {}; // Store device states
 let taskCounter = 0;
 
 // Assign a new task
-app.get("/task", (req, res) => {
-    const clientIp = req.ip;
+app.post("/task", (req, res) => {
+    const { mac } = req.body; // Read MAC address from request
+    if (!mac) {
+        return res.status(400).json({ error: "MAC address required" });
+    }
+
     const challenge = "task_" + taskCounter;
-    
+
     // Update or create device entry
-    devices[clientIp] = {
+    devices[mac] = {
         online: true,
         lastSeen: new Date().toISOString(), // Store last seen as ISO string
         challenge,
         solution: null,
-        reward: devices[clientIp]?.reward || 0 // Keep previous reward
+        reward: devices[mac]?.reward || 0 // Keep previous reward
     };
 
     taskCounter++;
@@ -29,12 +33,16 @@ app.get("/task", (req, res) => {
 
 // Receive solution
 app.post("/submit", (req, res) => {
-    const clientIp = req.ip;
-    
-    if (devices[clientIp]) {
-        devices[clientIp].solution = req.body.solution;
-        devices[clientIp].reward += 10; // Reward system
-        devices[clientIp].lastSeen = new Date().toISOString(); // Update timestamp
+    const { mac, solution } = req.body;
+
+    if (!mac || !solution) {
+        return res.status(400).json({ error: "MAC address and solution required" });
+    }
+
+    if (devices[mac]) {
+        devices[mac].solution = solution;
+        devices[mac].reward += 10; // Reward system
+        devices[mac].lastSeen = new Date().toISOString(); // Update timestamp
     }
     res.json({ status: "Solution received" });
 });
@@ -42,15 +50,20 @@ app.post("/submit", (req, res) => {
 // Monitor device status
 app.get("/status", (req, res) => {
     const now = new Date();
-    
-    for (const ip in devices) {
-        const lastSeen = new Date(devices[ip].lastSeen);
+
+    for (const mac in devices) {
+        const lastSeen = new Date(devices[mac].lastSeen);
         const timeDiff = (now - lastSeen) / 1000; // Convert ms to seconds
-        
-        devices[ip].online = timeDiff <= 10; // If inactive for 10s, mark offline
+
+        devices[mac].online = timeDiff <= 10; // If inactive for 10s, mark offline
     }
-    
+
     res.json(devices);
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
 
 // Serve UI
